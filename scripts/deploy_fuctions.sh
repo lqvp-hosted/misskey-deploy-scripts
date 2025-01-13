@@ -132,11 +132,17 @@ deploy() {
     info "Pulling updates from branch: $branch..."
     $GIT pull origin "$branch"
 
-    local deploy_details="**Deployment Info:**
-🔗 [${remote_hash:0:7}]($commit_link) deployed successfully"
+    info "Building and starting Docker containers..."
+    if docker compose up -d --build; then
+        local deploy_details="**Deployment Info:**
+🔗 [${remote_hash:0:7}]($commit_link) deployed successfully
+🐳 Docker containers built and started"
 
-    send_discord_notification "$STATUS_SUCCESS" \
-        "Deployment completed 🎉" \
-        "$DISCORD_COLOR_SUCCESS" \
-        "$deploy_details"
+        send_discord_notification "$STATUS_SUCCESS" \
+            "Deployment completed 🎉" \
+            "$DISCORD_COLOR_SUCCESS" \
+            "$deploy_details"
+    else
+        handle_error "Docker compose failed to build or start containers"
+    fi
 }
